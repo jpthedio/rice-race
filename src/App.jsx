@@ -2982,6 +2982,96 @@ function AnxietyToAction(){return(
   </div>
 </section>);}
 
+function OnePercentGraph(){
+  const canvasRef=useRef(null);
+  const[visible,setVisible]=useState(false);
+  const[animProgress,setAnimProgress]=useState(0);
+  useEffect(()=>{
+    const el=canvasRef.current;if(!el)return;
+    const obs=new IntersectionObserver(([e])=>{if(e.isIntersecting){setVisible(true);obs.disconnect();}},{threshold:0.3});
+    obs.observe(el);return()=>obs.disconnect();
+  },[]);
+  useEffect(()=>{
+    if(!visible)return;
+    let start=null;const duration=2000;
+    const tick=(ts)=>{if(!start)start=ts;const p=Math.min((ts-start)/duration,1);setAnimProgress(p);if(p<1)requestAnimationFrame(tick);};
+    requestAnimationFrame(tick);
+  },[visible]);
+  useEffect(()=>{
+    const canvas=canvasRef.current;if(!canvas)return;
+    const ctx=canvas.getContext("2d");
+    const dpr=window.devicePixelRatio||1;
+    const w=canvas.clientWidth;const h=canvas.clientHeight;
+    canvas.width=w*dpr;canvas.height=h*dpr;
+    ctx.scale(dpr,dpr);
+    ctx.clearRect(0,0,w,h);
+    const pad={top:40,right:30,bottom:50,left:55};
+    const gw=w-pad.left-pad.right;const gh=h-pad.top-pad.bottom;
+    // grid
+    ctx.strokeStyle="rgba(255,255,255,0.06)";ctx.lineWidth=1;
+    for(let i=0;i<=4;i++){const y=pad.top+gh*(1-i/4);ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(pad.left+gw,y);ctx.stroke();}
+    // y-axis labels
+    ctx.fillStyle="rgba(248,237,216,0.4)";ctx.font="11px 'Space Mono',monospace";ctx.textAlign="right";
+    ["1x","10x","20x","30x","37.8x"].forEach((l,i)=>{ctx.fillText(l,pad.left-8,pad.top+gh*(1-i/4)+4);});
+    // x-axis labels
+    ctx.textAlign="center";ctx.fillStyle="rgba(248,237,216,0.4)";
+    ["Day 1","","","3 mo","","","6 mo","","","9 mo","","","1 yr"].forEach((l,i)=>{
+      if(l){const x=pad.left+(i/12)*gw;ctx.fillText(l,x,h-pad.bottom+20);}
+    });
+    // 1% daily line (animated)
+    const maxDay=Math.floor(365*animProgress);
+    const maxVal=37.78;
+    if(maxDay>0){
+      // glow
+      ctx.shadowColor="rgba(232,184,75,0.4)";ctx.shadowBlur=12;
+      ctx.strokeStyle="#E8B84B";ctx.lineWidth=2.5;ctx.beginPath();
+      for(let d=0;d<=maxDay;d++){
+        const x=pad.left+(d/365)*gw;
+        const val=Math.pow(1.01,d);
+        const y=pad.top+gh*(1-val/maxVal);
+        if(d===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+      ctx.shadowBlur=0;
+      // fill under curve
+      const lastX=pad.left+(maxDay/365)*gw;
+      const lastVal=Math.pow(1.01,maxDay);
+      const lastY=pad.top+gh*(1-lastVal/maxVal);
+      ctx.lineTo(lastX,pad.top+gh);ctx.lineTo(pad.left,pad.top+gh);ctx.closePath();
+      const grad=ctx.createLinearGradient(0,pad.top,0,pad.top+gh);
+      grad.addColorStop(0,"rgba(232,184,75,0.15)");grad.addColorStop(1,"rgba(232,184,75,0)");
+      ctx.fillStyle=grad;ctx.fill();
+      // dot at tip
+      ctx.beginPath();ctx.arc(lastX,lastY,5,0,Math.PI*2);ctx.fillStyle="#E8B84B";ctx.fill();
+      ctx.beginPath();ctx.arc(lastX,lastY,2.5,0,Math.PI*2);ctx.fillStyle="#0A130A";ctx.fill();
+      // value label at tip
+      if(animProgress>0.3){
+        const dispVal=lastVal.toFixed(1);
+        ctx.fillStyle="#E8B84B";ctx.font="bold 13px 'Space Mono',monospace";ctx.textAlign="left";
+        ctx.fillText(dispVal+"x",lastX+10,lastY-8);
+      }
+    }
+    // flat "0% effort" line
+    ctx.setLineDash([4,4]);ctx.strokeStyle="rgba(248,113,113,0.4)";ctx.lineWidth=1.5;
+    ctx.beginPath();
+    const flatY=pad.top+gh*(1-1/maxVal);
+    ctx.moveTo(pad.left,flatY);ctx.lineTo(pad.left+gw*animProgress,flatY);ctx.stroke();
+    ctx.setLineDash([]);
+    if(animProgress>0.5){ctx.fillStyle="rgba(248,113,113,0.5)";ctx.font="11px 'Space Mono',monospace";ctx.textAlign="right";ctx.fillText("0% daily = 1x forever",pad.left+gw-5,flatY-8);}
+  },[animProgress]);
+  return(
+<section className="sec" style={{background:"linear-gradient(to bottom, var(--forest), var(--darkgreen))",textAlign:"center",paddingTop:"5rem",paddingBottom:"5rem"}}>
+  <div className="max" style={{maxWidth:"48rem"}}>
+    <Reveal><p style={{fontFamily:"'Space Mono',monospace",fontSize:"0.75rem",letterSpacing:"0.15em",color:"var(--goldd)",marginBottom:"1rem"}}>THE MATH OF SHOWING UP</p></Reveal>
+    <Reveal delay={1}><h2 className="rr-display" style={{fontSize:"clamp(2rem,4.5vw,3.5rem)",lineHeight:1.1,marginBottom:"0.5rem"}}>1% better every day.<br/><span style={{color:"var(--goldl)"}}>37.8x in one year.</span></h2></Reveal>
+    <Reveal delay={2}><p style={{fontSize:"1rem",color:"var(--creamd)",lineHeight:1.7,maxWidth:"34rem",margin:"0 auto 2.5rem"}}>15 minutes is roughly 1% of your day. One prompt. One tutorial. One small experiment with AI. That's all it takes. Compounding isn't magic — it's math.</p></Reveal>
+    <Reveal delay={2}>
+      <canvas ref={canvasRef} style={{width:"100%",height:"320px",maxWidth:"48rem",borderRadius:"12px",background:"rgba(10,19,10,0.6)",border:"1px solid rgba(255,255,255,0.06)"}}/>
+      <p style={{fontFamily:"'Space Mono',monospace",fontSize:"0.7rem",color:"var(--muted)",marginTop:"1rem",letterSpacing:"0.05em"}}>1.01³⁶⁵ = 37.78 · · · The curve doesn't lie.</p>
+    </Reveal>
+  </div>
+</section>);}
+
 function Close(){return(
 <section className="act-break" style={{minHeight:"100vh",background:"radial-gradient(ellipse 65% 65% at 50% 85%,rgba(201,146,26,0.07) 0%,transparent 70%), var(--forest)"}}>
   <Reveal><Label>The Rice Race Starts Today</Label></Reveal>
@@ -3106,6 +3196,7 @@ export default function App(){
       <StudentCreditsSection/>
       <AIReveal/>
       <AnxietyToAction/>
+      <OnePercentGraph/>
       <Close/>
       <Footer/>
     </div>
