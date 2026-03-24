@@ -1,30 +1,12 @@
 // Vercel Serverless Function — proxies requests to Anthropic API
-// Set ANTHROPIC_API_KEY in Vercel Environment Variables
+// Now optional: users can provide their own key via client-side direct calls
+// This proxy is kept as a fallback but no server key is required
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
-  }
-
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify(req.body),
-    });
-
-    const data = await response.json();
-    res.status(response.status).json(data);
-  } catch (error) {
-    res.status(500).json({ error: 'Proxy request failed' });
-  }
+  // No server-side key configured — return 503 so client knows to use direct mode
+  return res.status(503).json({ error: 'No server API key configured. Use your own key via the 🔑 button.' });
 }

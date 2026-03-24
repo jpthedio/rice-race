@@ -174,6 +174,72 @@ body { background:var(--forest); color:var(--cream); font-family:'Barlow',sans-s
 .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:1.5rem; }
 `;
 
+// ─── API Key Context ─────────────────────────────────────────────
+const ApiKeyContext=React.createContext({apiKey:"",setApiKey:()=>{},hasKey:false});
+function ApiKeyProvider({children}){
+  const[apiKey,setApiKey]=useState(()=>sessionStorage.getItem("rr_api_key")||"");
+  useEffect(()=>{if(apiKey)sessionStorage.setItem("rr_api_key",apiKey);else sessionStorage.removeItem("rr_api_key");},[apiKey]);
+  return <ApiKeyContext.Provider value={{apiKey,setApiKey,hasKey:apiKey.startsWith("sk-ant-")}}>{children}</ApiKeyContext.Provider>;
+}
+function useApiKey(){return React.useContext(ApiKeyContext);}
+
+async function callClaude({apiKey,body}){
+  if(!apiKey)throw new Error("no-key");
+  // Call Anthropic directly from client with user's own key
+  const res=await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+    body:JSON.stringify(body),
+  });
+  if(!res.ok)throw new Error(`API ${res.status}`);
+  return res.json();
+}
+
+function ApiKeyInput(){
+  const{apiKey,setApiKey,hasKey}=useApiKey();
+  const[open,setOpen]=useState(false);
+  const[testing,setTesting]=useState(false);
+  const[status,setStatus]=useState(null); // null | 'ok' | 'fail'
+  const test=async()=>{
+    if(!apiKey.startsWith("sk-ant-"))return setStatus("fail");
+    setTesting(true);
+    try{
+      await callClaude({apiKey,body:{model:"claude-sonnet-4-20250514",max_tokens:10,messages:[{role:"user",content:"Say ok"}]}});
+      setStatus("ok");
+    }catch{setStatus("fail");}
+    setTesting(false);
+  };
+  return(
+    <div style={{position:"fixed",bottom:"1rem",right:"1rem",zIndex:9999,fontFamily:"'Space Mono',monospace"}}>
+      {open?(
+        <div style={{background:"rgba(10,19,10,0.95)",border:"1px solid rgba(201,146,26,0.3)",borderRadius:"12px",padding:"1rem",width:"320px",backdropFilter:"blur(12px)"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"0.75rem"}}>
+            <span style={{fontSize:"0.7rem",color:"var(--goldl)",letterSpacing:"0.1em"}}>🔑 YOUR CLAUDE API KEY</span>
+            <button onClick={()=>setOpen(false)} style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",fontSize:"1rem"}}>✕</button>
+          </div>
+          <p style={{fontSize:"0.7rem",color:"var(--muted)",marginBottom:"0.5rem",lineHeight:1.4}}>Optional. Enables live AI demos. Key stays in your browser only — never sent to our servers.</p>
+          <input value={apiKey} onChange={e=>{setApiKey(e.target.value);setStatus(null);}} placeholder="sk-ant-api03-..."
+            style={{width:"100%",padding:"0.5rem",background:"rgba(0,0,0,0.4)",border:"1px solid rgba(255,255,255,0.1)",color:"var(--cream)",fontSize:"0.75rem",borderRadius:"6px",marginBottom:"0.5rem",boxSizing:"border-box"}}
+          />
+          <div style={{display:"flex",gap:"0.5rem"}}>
+            <button onClick={test} disabled={testing} style={{flex:1,padding:"0.4rem",background:"rgba(201,146,26,0.15)",border:"1px solid rgba(201,146,26,0.3)",color:"var(--goldl)",fontSize:"0.7rem",cursor:"pointer",borderRadius:"4px"}}>{testing?"Testing...":"Test Key"}</button>
+            {apiKey&&<button onClick={()=>{setApiKey("");setStatus(null);}} style={{padding:"0.4rem 0.8rem",background:"rgba(248,113,113,0.1)",border:"1px solid rgba(248,113,113,0.2)",color:"#F87171",fontSize:"0.7rem",cursor:"pointer",borderRadius:"4px"}}>Clear</button>}
+          </div>
+          {status==="ok"&&<p style={{fontSize:"0.7rem",color:"#86efac",marginTop:"0.4rem"}}>✓ Key works! Live AI demos are now active.</p>}
+          {status==="fail"&&<p style={{fontSize:"0.7rem",color:"#F87171",marginTop:"0.4rem"}}>✗ Key invalid or error. Check your key.</p>}
+        </div>
+      ):(
+        <button onClick={()=>setOpen(true)} style={{
+          background:hasKey?"rgba(134,239,172,0.1)":"rgba(201,146,26,0.1)",
+          border:`1px solid ${hasKey?"rgba(134,239,172,0.3)":"rgba(201,146,26,0.2)"}`,
+          color:hasKey?"#86efac":"var(--goldd)",borderRadius:"50px",padding:"0.5rem 1rem",
+          cursor:"pointer",fontSize:"0.7rem",fontFamily:"'Space Mono',monospace",
+          backdropFilter:"blur(8px)",display:"flex",alignItems:"center",gap:"0.4rem",
+        }}>{hasKey?"🟢 API Key Active":"🔑 Add API Key"}</button>
+      )}
+    </div>
+  );
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────
 function useReveal(threshold=0.12){const ref=useRef(null);const[visible,setVisible]=useState(false);useEffect(()=>{const el=ref.current;if(!el)return;const obs=new IntersectionObserver(([e])=>{if(e.isIntersecting){setVisible(true);obs.disconnect();}},{threshold});obs.observe(el);return()=>obs.disconnect();},[threshold]);return[ref,visible];}
 function Reveal({children,delay=0,className=""}){const[ref,visible]=useReveal();return(<div ref={ref} className={`rv ${visible?"in":""} ${delay?`rv-d${delay}`:""} ${className}`}>{children}</div>);}
@@ -485,50 +551,32 @@ function TitoTitaAnalyzer(){
   const [result, setResult] = React.useState(null);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState(null);
-  const [live, setLive] = React.useState(null); // null=unknown, true=api works, false=fallback
-
-  // Check API availability on mount
-  React.useEffect(() => {
-    (async () => {
-      try {
-        const r = await fetch("/api/claude", {
-          method:"POST", headers:{"Content-Type":"application/json"},
-          body: JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:10,messages:[{role:"user",content:"Say ok"}]}),
-        });
-        setLive(r.ok);
-      } catch { setLive(false); }
-    })();
-  }, []);
+  const {apiKey,hasKey} = useApiKey();
 
   const analyze = async (advice) => {
     const text = advice || input;
     if (!text.trim()) return;
-    // Try fallback first if no API
-    if (live === false) {
+    // Use fallback if no API key
+    if (!hasKey) {
       const fb = TITO_FALLBACKS[text];
       if (fb) { setResult(fb); return; }
       setResult(TITO_FALLBACKS[presets[0]]); return;
     }
     setLoading(true); setError(null); setResult(null);
     try {
-      const res = await fetch("/api/claude", {
-        method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({
+      const data = await callClaude({apiKey, body:{
           model:"claude-sonnet-4-20250514", max_tokens:1000,
           system: `You are a witty, warm Filipino career advisor for IT graduates (2026). Analyze the "Tito/Tita advice" given. Respond in this EXACT JSON format, no other text:
 {"emoji":"(one relevant emoji)","headline":"(one sentence in quotes — what they ACTUALLY mean underneath the advice, emotionally honest, starts with a quote mark)","verdict":"(2-3 word verdict like 'Outdated but loving' or 'Half-right, half-fear')","emotional_bias":"(1-2 sentences on the emotional/cultural motivation behind this advice)","reality_2026":"(2-3 sentences on what the actual job market data says in 2026 Philippines — be specific with trends)","what_actually_works":"(2-3 sentences of practical counter-advice for a fresh IT grad)","love_rating":"(1-5, how much love vs how much fear is driving this advice)"}
 Be funny but respectful. These are real family dynamics. Mix Taglish naturally.`,
           messages:[{role:"user",content:`Analyze this Tito/Tita career advice: "${text}"`}],
-        }),
-      });
-      const data = await res.json();
+      }});
       const raw = data.content?.map(c => c.text || "").join("") || "";
       setResult(JSON.parse(raw.replace(/```json|```/g,"").trim()));
     } catch(e) {
-      // Fallback on error
       const fb = TITO_FALLBACKS[text];
-      if (fb) { setResult(fb); setLive(false); }
-      else { setError("Couldn't analyze — try a preset."); setLive(false); }
+      if (fb) { setResult(fb); }
+      else { setError("Couldn't analyze — try a preset or check your API key."); }
     }
     setLoading(false);
   };
@@ -536,10 +584,10 @@ Be funny but respectful. These are real family dynamics. Mix Taglish naturally.`
   return(
 <div>
   {/* Mode indicator */}
-  {live === false && (
+  {!hasKey && (
     <div style={{marginBottom:"1rem",padding:"0.6rem 1rem",background:"rgba(201,146,26,0.06)",border:"1px solid rgba(201,146,26,0.15)",display:"flex",alignItems:"center",gap:"0.5rem"}}>
       <span style={{fontSize:"0.85rem"}}>💡</span>
-      <p style={{fontSize:"0.8rem",color:"var(--creamd)",lineHeight:1.5}}>Showing pre-generated examples. <strong style={{color:"var(--goldl)"}}>To try it live with your own input</strong>, open this artifact inside <a href="https://claude.ai" target="_blank" rel="noopener" style={{color:"var(--goldl)",textDecoration:"underline"}}>claude.ai</a> — it runs on Claude's API in real time.</p>
+      <p style={{fontSize:"0.8rem",color:"var(--creamd)",lineHeight:1.5}}>Showing pre-generated examples. <strong style={{color:"var(--goldl)"}}>Add your Claude API key</strong> via the 🔑 button to try live with custom input.</p>
     </div>
   )}
 
@@ -558,8 +606,8 @@ Be funny but respectful. These are real family dynamics. Mix Taglish naturally.`
     ))}
   </div>
 
-  {/* Custom input — only when API is available */}
-  {live !== false && (
+  {/* Custom input — only when user has API key */}
+  {hasKey && (
     <div style={{display:"flex",gap:"0.5rem",marginBottom:"1.5rem"}}>
       <input value={input} onChange={e => setInput(e.target.value)} placeholder="Or type your own Tito/Tita advice..."
         onKeyDown={e => e.key === "Enter" && analyze()}
@@ -630,79 +678,62 @@ function CareerPathFinder(){
   const [result, setResult] = React.useState(null);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState(null);
-  const [live, setLive] = React.useState(null);
-
-  React.useEffect(() => {
-    (async () => {
-      try {
-        const r = await fetch("/api/claude", {
-          method:"POST", headers:{"Content-Type":"application/json"},
-          body: JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:10,messages:[{role:"user",content:"Say ok"}]}),
-        });
-        setLive(r.ok);
-      } catch { setLive(false); }
-    })();
-  }, []);
+  const {apiKey,hasKey} = useApiKey();
 
   const find = async (deg) => {
     const d = deg || custom || degree;
     if (!d.trim()) return;
-    if (live === false) {
+    if (!hasKey) {
       const fb = CAREER_FALLBACKS[d];
       if (fb) { setResult(fb); return; }
-      // Show closest match or first fallback
       setResult(CAREER_FALLBACKS["BS Information Technology"]); return;
     }
     setLoading(true); setError(null); setResult(null);
     try {
-      const res = await fetch("/api/claude", {
-        method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({
+      const data = await callClaude({apiKey, body:{
           model:"claude-sonnet-4-20250514", max_tokens:1200,
           system: `You are an AI career futureproofing strategist for Filipino graduates (2026). Given a degree, show how to COMBINE that degree with AI to become irreplaceable — not replaced. Suggest 3 specific career paths where their existing degree PLUS AI skills creates a premium, hard-to-automate niche. Respond in EXACT JSON, no other text:
 {"degree":"(echo back)","top_skill":"(the ONE core skill from this degree that AI amplifies most — format: 'Skill Name — short explanation', max 12 words)","paths":[{"emoji":"(icon)","title":"(creative 3-5 word title)","description":"(2-3 sentences: what this AI-enhanced role does, why their specific degree gives them an edge AI alone can't replicate, and one company or sector in PH/remote hiring for this)","salary_range":"(realistic PH or remote salary range in PHP/month for 1-2 years experience)","ai_tools":"(2-3 specific AI tools they'd use daily in this role — actual product names)","automation_shield":"(1 sentence: why this specific combination is hard for pure AI to replace)","surprise_factor":"(1-10, how unexpected this path is)"}],"mindset_shift":"(1-2 sentences: the key reframe — what their degree ACTUALLY trained them for that AI can't replicate, and how AI turns that into a superpower)"}
 Be specific to PH job market. Reference real companies, sectors, AI tools, or platforms. The message: AI doesn't replace your degree — it amplifies it.`,
           messages:[{role:"user",content:`Find 3 unconventional career paths for a fresh graduate with: ${d}`}],
-        }),
-      });
-      const data = await res.json();
+      }});
       const raw = data.content?.map(c => c.text || "").join("") || "";
       setResult(JSON.parse(raw.replace(/```json|```/g,"").trim()));
     } catch(e) {
       const fb = CAREER_FALLBACKS[d];
-      if (fb) { setResult(fb); setLive(false); }
-      else { setError("Couldn't generate paths — try a preset degree."); setLive(false); }
+      if (fb) { setResult(fb); }
+      else { setError("Couldn't generate paths — try a preset or check your API key."); }
     }
     setLoading(false);
   };
 
   return(
 <div>
-  {live === false && (
+  {!hasKey && (
     <div style={{marginBottom:"1rem",padding:"0.6rem 1rem",background:"rgba(201,146,26,0.06)",border:"1px solid rgba(201,146,26,0.15)",display:"flex",alignItems:"center",gap:"0.5rem"}}>
       <span style={{fontSize:"0.85rem"}}>💡</span>
-      <p style={{fontSize:"0.8rem",color:"var(--creamd)",lineHeight:1.5}}>Showing pre-generated examples for selected degrees. <strong style={{color:"var(--goldl)"}}>Try it live inside <a href="https://claude.ai" target="_blank" rel="noopener" style={{color:"var(--goldl)",textDecoration:"underline"}}>claude.ai</a></strong> to get personalized results for any degree or specialization.</p>
+      <p style={{fontSize:"0.8rem",color:"var(--creamd)",lineHeight:1.5}}>Showing pre-generated examples for selected degrees. <strong style={{color:"var(--goldl)"}}>Add your Claude API key</strong> via the 🔑 button for personalized results with any degree.</p>
     </div>
   )}
 
-  <p style={{fontFamily:"'Space Mono',monospace",fontSize:"0.65rem",color:"var(--muted)",marginBottom:"0.6rem",letterSpacing:"0.06em"}}>{live === false ? "SELECT A DEGREE TO SEE EXAMPLE RESULTS" : "SELECT YOUR DEGREE (OR TYPE BELOW)"}</p>
+  <p style={{fontFamily:"'Space Mono',monospace",fontSize:"0.65rem",color:"var(--muted)",marginBottom:"0.6rem",letterSpacing:"0.06em"}}>{!hasKey ? "SELECT A DEGREE TO SEE EXAMPLE RESULTS" : "SELECT YOUR DEGREE (OR TYPE BELOW)"}</p>
   <div style={{display:"flex",flexWrap:"wrap",gap:"0.4rem",marginBottom:"1rem"}}>
     {degrees.map((d,i) => {
       const hasFallback = !!CAREER_FALLBACKS[d];
-      const show = live !== false || hasFallback;
+      const show = hasKey || hasFallback;
       return show ? (
         <button key={i} onClick={() => { setDegree(d); find(d); }} style={{
           padding:"0.4rem 0.7rem",cursor:"pointer",
           background: degree === d ? "rgba(201,146,26,0.12)" : "rgba(255,255,255,0.03)",
           border: degree === d ? "1px solid rgba(201,146,26,0.35)" : "1px solid rgba(255,255,255,0.08)",
           fontSize:"0.75rem",color: degree === d ? "var(--goldl)" : "var(--creamd)",transition:"all 0.2s",
-        }}>{d}{live === false && !hasFallback ? "" : ""}</button>
+        }}>{d}</button>
       ) : null;
     })}
   </div>
 
-  {/* Custom input — only when API is available */}
-  {live !== false && (
+  {/* Custom input — only when user has API key */}
+  {hasKey && (
     <div style={{display:"flex",gap:"0.5rem",marginBottom:"1.5rem"}}>
       <input value={custom} onChange={e => setCustom(e.target.value)} placeholder="Or type your degree / specialization..."
         onKeyDown={e => e.key === "Enter" && find()}
@@ -789,62 +820,46 @@ function GovernanceAnalyzer(){
   const [custom, setCustom] = React.useState("");
   const [result, setResult] = React.useState(null);
   const [loading, setLoading] = React.useState(false);
-  const [live, setLive] = React.useState(null);
-
-  React.useEffect(() => {
-    (async () => {
-      try {
-        const r = await fetch("/api/claude", {
-          method:"POST", headers:{"Content-Type":"application/json"},
-          body: JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:10,messages:[{role:"user",content:"Say ok"}]}),
-        });
-        setLive(r.ok);
-      } catch { setLive(false); }
-    })();
-  }, []);
+  const {apiKey,hasKey} = useApiKey();
 
   const analyze = async (topic) => {
     const t = topic || custom;
     if (!t.trim()) return;
     setSelected(topic || t);
-    if (live === false) {
+    if (!hasKey) {
       const fb = GOV_FALLBACKS[t];
       if (fb) { setResult(fb); return; }
       setResult(GOV_FALLBACKS[topics[0]]); return;
     }
     setLoading(true); setResult(null);
     try {
-      const res = await fetch("/api/claude", {
-        method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({
+      const data = await callClaude({apiKey, body:{
           model:"claude-sonnet-4-20250514", max_tokens:1200,
           system: `You analyze Philippine governance topics by showing two sides: ideal good governance vs the actual reality (bad governance). Be funny, sharp, culturally specific to PH. Use Taglish where natural. For anything explicit use asterisks (e.g. b*llsh*t, f**k). Respond in EXACT JSON, no other text:
 {"topic":"(echo)","emoji":"(relevant emoji)","good":{"slogan":"(an aspirational one-line campaign tagline for a politician who ACTUALLY means it — idealistic, sharp, max 10 words)","title":"(aspirational title)","points":["(4 specific policy points that would actually work — reference real countries that did it right)"],"tone":"(1-2 sentence inspirational closer)"},"bad":{"slogan":"(a sarcastic campaign slogan in quotes, followed by asterisk and what actually happens — funny, max 15 words)","title":"(sarcastic title)","points":["(4 specific, funny, painfully accurate descriptions of the current reality — be specific about agencies, programs, or incidents everyone knows)"],"tone":"(1-2 sentence sardonic closer that hits hard)"}}
 The good side should be genuinely inspiring with real examples. The bad side should be cathartic, funny, and accurate — the kind of thing everyone thinks but nobody says in a government meeting.`,
           messages:[{role:"user",content:`Analyze this Philippine governance topic — good vs bad: ${t}`}],
-        }),
-      });
-      const data = await res.json();
+      }});
       const raw = data.content?.map(c => c.text || "").join("") || "";
       setResult(JSON.parse(raw.replace(/```json|```/g,"").trim()));
     } catch(e) {
       const fb = GOV_FALLBACKS[t];
-      if (fb) { setResult(fb); setLive(false); }
-      else { setResult(GOV_FALLBACKS[topics[0]]); setLive(false); }
+      if (fb) { setResult(fb); }
+      else { setResult(GOV_FALLBACKS[topics[0]]); }
     }
     setLoading(false);
   };
 
   return(
 <div>
-  {live === false && (
+  {!hasKey && (
     <div style={{marginBottom:"1rem",padding:"0.6rem 1rem",background:"rgba(201,146,26,0.06)",border:"1px solid rgba(201,146,26,0.15)",display:"flex",alignItems:"center",gap:"0.5rem"}}>
       <span style={{fontSize:"0.85rem"}}>💡</span>
-      <p style={{fontSize:"0.8rem",color:"var(--creamd)",lineHeight:1.5}}>Showing pre-generated analysis. <strong style={{color:"var(--goldl)"}}>Open in <a href="https://claude.ai" target="_blank" rel="noopener" style={{color:"var(--goldl)",textDecoration:"underline"}}>claude.ai</a></strong> to generate fresh takes on any governance topic.</p>
+      <p style={{fontSize:"0.8rem",color:"var(--creamd)",lineHeight:1.5}}>Showing pre-generated analysis. <strong style={{color:"var(--goldl)"}}>Add your Claude API key</strong> via the 🔑 button to generate fresh takes on any governance topic.</p>
     </div>
   )}
 
-  <p style={{fontFamily:"'Space Mono',monospace",fontSize:"0.65rem",color:"var(--muted)",marginBottom:"0.6rem",letterSpacing:"0.06em"}}>{live === false ? "SELECT A TOPIC TO SEE EXAMPLE ANALYSIS" : "PICK A TOPIC OR TYPE YOUR OWN"}</p>
+  <p style={{fontFamily:"'Space Mono',monospace",fontSize:"0.65rem",color:"var(--muted)",marginBottom:"0.6rem",letterSpacing:"0.06em"}}>{!hasKey ? "SELECT A TOPIC TO SEE EXAMPLE ANALYSIS" : "PICK A TOPIC OR TYPE YOUR OWN"}</p>
   <div style={{display:"flex",flexWrap:"wrap",gap:"0.4rem",marginBottom:"1rem"}}>
     {topics.map((t,i) => (
       <button key={i} onClick={() => { setCustom(""); analyze(t); }} style={{
@@ -856,8 +871,8 @@ The good side should be genuinely inspiring with real examples. The bad side sho
     ))}
   </div>
 
-  {/* Custom input — only when API is available */}
-  {live !== false && (
+  {/* Custom input — only when user has API key */}
+  {hasKey && (
     <div style={{display:"flex",gap:"0.5rem",marginBottom:"1.5rem"}}>
       <input value={custom} onChange={e => setCustom(e.target.value)} placeholder="Or type any PH governance topic... (e.g. 'War on Drugs', 'OFW Support', 'Flood Control')"
         onKeyDown={e => e.key === "Enter" && analyze()}
@@ -3187,10 +3202,12 @@ export default function App(){
     };
   },[]);
   return(
+    <ApiKeyProvider>
     <ToastProvider>
     <style>{STYLES}</style>
     <div className="noise">
       <Nav activeSection={activeSection}/>
+      <ApiKeyInput/>
       <Hero/>
       <div className="divider"/>
       <Intro/>
@@ -3241,5 +3258,6 @@ export default function App(){
       <Close/>
       <Footer/>
     </div>
-    </ToastProvider>  );
+    </ToastProvider>
+    </ApiKeyProvider>  );
 }
