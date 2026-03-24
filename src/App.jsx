@@ -3069,7 +3069,7 @@ function OnePercentGraph(){
   <div className="max" style={{maxWidth:"48rem"}}>
     <Reveal><p style={{fontFamily:"'Space Mono',monospace",fontSize:"0.75rem",letterSpacing:"0.15em",color:"var(--goldd)",marginBottom:"1rem"}}>THE MATH OF SHOWING UP</p></Reveal>
     <Reveal delay={1}><h2 className="rr-display" style={{fontSize:"clamp(2rem,4.5vw,3.5rem)",lineHeight:1.1,marginBottom:"0.5rem"}}>1% better every day.<br/><span style={{color:"var(--goldl)"}}>37.8x in one year.</span></h2></Reveal>
-    <Reveal delay={2}><p style={{fontSize:"1rem",color:"var(--creamd)",lineHeight:1.7,maxWidth:"34rem",margin:"0 auto 2.5rem"}}>15 minutes is roughly 1% of your day. One prompt. One tutorial. One small experiment with AI. That's all it takes. Compounding isn't magic — it's math.</p></Reveal>
+    <Reveal delay={2}><p style={{fontSize:"1rem",color:"var(--creamd)",lineHeight:1.7,maxWidth:"34rem",margin:"0 auto 2.5rem"}}>15 minutes is roughly 1% of your day. That's 1 Mobile Legends game. ⅓ of a K-drama episode. One TikTok scroll session. Replace just one with an AI experiment. Compounding isn't magic — it's math.</p></Reveal>
     <Reveal delay={2}>
       <canvas ref={canvasRef} style={{width:"100%",height:"320px",maxWidth:"48rem",borderRadius:"12px",background:"rgba(10,19,10,0.6)",border:"1px solid rgba(255,255,255,0.06)"}}/>
       <p style={{fontFamily:"'Space Mono',monospace",fontSize:"0.7rem",color:"var(--muted)",marginTop:"1rem",letterSpacing:"0.05em"}}>1.01³⁶⁵ = 37.78 · · · The curve doesn't lie.</p>
