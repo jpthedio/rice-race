@@ -2999,8 +2999,7 @@ export default function App(){
       "%c🍚 THE RICE RACE %c\n\n" +
       "Built with Claude ✦ AI-powered storytelling\n\n" +
       "%c🎁 EASTER EGG: Only 3 people can use this.%c\n\n" +
-      "Get a FREE week of Claude Code — the AI tool that built this entire presentation.\n" +
-      "Send to a friend. If they subscribe, you get $10 extra usage.\n\n" +
+      "Get a FREE week of Claude Code — the AI tool that built this entire presentation.\n\n" +
       "👉 https://claude.ai/referral/xAOatMhs6w\n\n" +
       "⚡ Only 3 referral slots. First come, first served.\n" +
       "Terms apply.",
