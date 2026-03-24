@@ -969,6 +969,31 @@ function AIReveal(){return(
         <div style={{width:"3rem",height:"2px",background:"var(--gold)",margin:"1.2rem auto",opacity:0.3}}/>
         <p style={{fontSize:"1rem",color:"var(--creamd)",lineHeight:1.7}}>3,000+ lines of React. Interactive demos. Animated charts. Typewriter effects. Confetti. <strong style={{color:"var(--goldl)"}}>Zero lines of code written by hand.</strong></p>
         <p style={{fontSize:"0.9rem",color:"var(--muted)",lineHeight:1.7,marginTop:"0.8rem",fontStyle:"italic"}}>The person who made this isn't a React developer. He's a Webflow developer who knew how to describe what he wanted. That's the point.</p>
+
+        {/* How it was built */}
+        <div style={{marginTop:"2rem",padding:"1.5rem",background:"rgba(201,146,26,0.06)",border:"1px solid rgba(201,146,26,0.12)",textAlign:"left"}}>
+          <p style={{fontFamily:"'Space Mono',monospace",fontSize:"0.65rem",color:"var(--goldl)",letterSpacing:"0.12em",marginBottom:"1rem"}}>HOW THIS WAS MADE</p>
+          <div style={{display:"flex",gap:"1.5rem",alignItems:"flex-start",flexWrap:"wrap"}}>
+            <img src="/phone-build.jpg" alt="Building the Rice Race on a phone" style={{width:"140px",height:"auto",borderRadius:"4px",border:"1px solid rgba(201,146,26,0.2)",flexShrink:0}} />
+            <div style={{flex:1,minWidth:"220px"}}>
+              <div style={{display:"flex",flexDirection:"column",gap:"0.8rem"}}>
+                <div style={{display:"flex",alignItems:"flex-start",gap:"0.6rem"}}>
+                  <span style={{color:"var(--goldl)",fontSize:"1.1rem",lineHeight:1}}>①</span>
+                  <p style={{fontSize:"0.85rem",color:"var(--creamd)",lineHeight:1.6}}>Started as a <strong style={{color:"var(--goldl)"}}>Claude Artifact</strong> — built entirely through conversation with Claude AI on a phone.</p>
+                </div>
+                <div style={{display:"flex",alignItems:"flex-start",gap:"0.6rem"}}>
+                  <span style={{color:"var(--goldl)",fontSize:"1.1rem",lineHeight:1}}>②</span>
+                  <p style={{fontSize:"0.85rem",color:"var(--creamd)",lineHeight:1.6}}>Deployed to <strong style={{color:"var(--goldl)"}}>Vercel</strong> from a phone — yes, a phone — because why not.</p>
+                </div>
+                <div style={{display:"flex",alignItems:"flex-start",gap:"0.6rem"}}>
+                  <span style={{color:"var(--goldl)",fontSize:"1.1rem",lineHeight:1}}>③</span>
+                  <p style={{fontSize:"0.85rem",color:"var(--creamd)",lineHeight:1.6}}>Further updated with <strong style={{color:"var(--goldl)"}}>Claude Code</strong> — AI-powered terminal for live iteration and deployment.</p>
+                </div>
+              </div>
+              <a href="https://claude.ai/public/artifacts/d704a2f3-8a46-4429-87cc-b27c06c57a0d" target="_blank" rel="noopener" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",marginTop:"1.2rem",padding:"0.6rem 1.2rem",background:"var(--gold)",color:"var(--forest)",fontFamily:"'Space Mono',monospace",fontSize:"0.75rem",fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",textDecoration:"none",transition:"background 0.2s"}}>✦ View Original Artifact</a>
+            </div>
+          </div>
+        </div>
       </div>
     </Reveal>
   </div>
