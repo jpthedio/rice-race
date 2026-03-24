@@ -3005,7 +3005,7 @@ function OnePercentGraph(){
     canvas.width=w*dpr;canvas.height=h*dpr;
     ctx.scale(dpr,dpr);
     ctx.clearRect(0,0,w,h);
-    const pad={top:40,right:30,bottom:50,left:55};
+    const pad={top:50,right:70,bottom:50,left:55};
     const gw=w-pad.left-pad.right;const gh=h-pad.top-pad.bottom;
     // grid
     ctx.strokeStyle="rgba(255,255,255,0.06)";ctx.lineWidth=1;
@@ -3047,8 +3047,13 @@ function OnePercentGraph(){
       // value label at tip
       if(animProgress>0.3){
         const dispVal=lastVal.toFixed(1);
-        ctx.fillStyle="#E8B84B";ctx.font="bold 13px 'Space Mono',monospace";ctx.textAlign="left";
-        ctx.fillText(dispVal+"x",lastX+10,lastY-8);
+        ctx.fillStyle="#E8B84B";ctx.font="bold 13px 'Space Mono',monospace";
+        const nearRight=lastX>w-pad.right-50;
+        const nearTop=lastY<pad.top+30;
+        ctx.textAlign=nearRight?"right":"left";
+        const lx=nearRight?lastX-10:lastX+10;
+        const ly=nearTop?lastY+22:lastY-8;
+        ctx.fillText(dispVal+"x",lx,ly);
       }
     }
     // flat "0% effort" line
