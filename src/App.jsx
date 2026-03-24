@@ -2998,12 +2998,15 @@ export default function App(){
     console.log(
       "%c🍚 THE RICE RACE %c\n\n" +
       "Built with Claude ✦ AI-powered storytelling\n\n" +
-      "Give Claude, get more Claude 🎁\n" +
-      "Send a friend a free week of Claude Code.\n" +
-      "If they love it and subscribe, you'll get $10 of extra usage.\n\n" +
+      "%c🎁 EASTER EGG: Only 3 people can use this.%c\n\n" +
+      "Get a FREE week of Claude Code — the AI tool that built this entire presentation.\n" +
+      "Send to a friend. If they subscribe, you get $10 extra usage.\n\n" +
       "👉 https://claude.ai/referral/xAOatMhs6w\n\n" +
+      "⚡ Only 3 referral slots. First come, first served.\n" +
       "Terms apply.",
       "color:#E8B84B;font-size:24px;font-weight:900;font-family:'Barlow Condensed',sans-serif;",
+      "color:#F2EDD8;font-size:12px;font-family:'Space Mono',monospace;",
+      "color:#86efac;font-size:14px;font-weight:900;font-family:'Space Mono',monospace;background:#0a1a0a;padding:4px 8px;border-radius:4px;",
       "color:#F2EDD8;font-size:12px;font-family:'Space Mono',monospace;"
     );
   }, []);
