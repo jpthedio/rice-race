@@ -247,7 +247,7 @@ function CiteTip({ label, body, url }) {
 // ─── DATA ────────────────────────────────────────────────────────
 const DATA_VS=[
   {stat:">50%",desc:"of businesses on Upwork/Fiverr in 2022 spent $0 on them by Q2 2025",src:"Ramp / arXiv:2602.00139 / Jan 2026",tipLabel:"Ramp - Payrolls to Prompts",tipBody:"Study of thousands of firms 2021-2025. Writing & translation demand fell 20-50%.",url:"https://arxiv.org/abs/2602.00139"},
-  {stat:"$0.03",isCurrency:true,statUSD:"0.03",statPHP:"1.68",desc:"in AI spend replaces $1 of freelance labor — a 20-25x cost reduction",src:"Ramp / arXiv:2602.00139 / Jan 2026",tipLabel:"Ramp - Payrolls to Prompts",tipBody:"AI platform spend rose sharply while freelance platform spend collapsed.",url:"https://arxiv.org/abs/2602.00139"},
+  {stat:"$0.03",isCurrency:true,statUSD:"0.03",statPHP:"1.80",desc:"in AI spend replaces $1 of freelance labor — a 20-25x cost reduction",src:"Ramp / arXiv:2602.00139 / Jan 2026",tipLabel:"Ramp - Payrolls to Prompts",tipBody:"AI platform spend rose sharply while freelance platform spend collapsed.",url:"https://arxiv.org/abs/2602.00139"},
   {stat:"50%",desc:"of entry-level white-collar jobs at risk within 5 years",src:"Dario Amodei, Anthropic / 2025",tipLabel:"Dario Amodei - Machines of Loving Grace",tipBody:"Entry-level knowledge work most exposed in near term.",url:"https://darioamodei.com/machines-of-loving-grace"},
   {stat:"170M",desc:"new jobs created by 2030 — but requiring fundamentally different skills",src:"World Economic Forum / 2025",tipLabel:"WEF - Future of Jobs Report 2025",tipBody:"170M created, 92M displaced, net +78M. Survey of 1,000+ employers.",url:"https://www.weforum.org/reports/the-future-of-jobs-report-2025/"},
 ];
@@ -276,13 +276,13 @@ function Hero(){return(
   <div className="hero-sidestats" aria-hidden="true">
     <div>
       <div style={{fontFamily:"'Space Mono',monospace",fontSize:"0.7rem",color:"var(--creamd)",letterSpacing:"0.1em",marginBottom:"0.4rem",textAlign:"right"}}>HUMAN LABOR</div>
-      <div className="hero-sidestat-num" style={{color:"var(--redl)"}}>&#8369;56.00</div>
+      <div className="hero-sidestat-num" style={{color:"var(--redl)"}}>&#8369;60.00</div>
       <div className="hero-sidestat-lbl" style={{color:"var(--redl)",opacity:0.7}}>$1.00 USD</div>
     </div>
     <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:900,fontSize:"1.4rem",color:"var(--goldd)",textAlign:"right",letterSpacing:"0.1em"}}>VS</div>
     <div>
       <div style={{fontFamily:"'Space Mono',monospace",fontSize:"0.7rem",color:"var(--creamd)",letterSpacing:"0.1em",marginBottom:"0.4rem",textAlign:"right"}}>AI COST</div>
-      <div className="hero-sidestat-num" style={{color:"var(--goldl)"}}>&#8369;1.68</div>
+      <div className="hero-sidestat-num" style={{color:"var(--goldl)"}}>&#8369;1.80</div>
       <div className="hero-sidestat-lbl" style={{color:"var(--goldl)",opacity:0.7}}>$0.03 USD</div>
     </div>
     <div><div className="hero-sidestat-lbl" style={{borderTop:"1px solid rgba(201,146,26,0.3)",paddingTop:"0.8rem"}}>Ramp / Payrolls to Prompts / 2026</div></div>
@@ -1207,7 +1207,7 @@ function RaceGrind(){return(
 </section>);}
 
 function RaceDisruption(){
-  const RATE = 56;
+  const RATE = 60;
   const AI_RATIO = 0.03;
   const [amount, setAmount] = React.useState(1);
   const [isPHP, setIsPHP] = React.useState(true);
