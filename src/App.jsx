@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import * as THREE from "three";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Area, AreaChart, Tooltip, ReferenceLine, CartesianGrid } from "recharts";
 
