@@ -2969,6 +2969,19 @@ function Footer(){return(<footer style={{background:"#0A0D0A",borderTop:"1px sol
 
 // ─── APP ──────────────────────────────────────────────────────────
 export default function App(){
+  useEffect(() => {
+    console.log(
+      "%c🍚 THE RICE RACE %c\n\n" +
+      "Built with Claude ✦ AI-powered storytelling\n\n" +
+      "Give Claude, get more Claude 🎁\n" +
+      "Send a friend a free week of Claude Code.\n" +
+      "If they love it and subscribe, you'll get $10 of extra usage.\n\n" +
+      "👉 https://claude.ai/referral/xAOatMhs6w\n\n" +
+      "Terms apply.",
+      "color:#E8B84B;font-size:24px;font-weight:900;font-family:'Barlow Condensed',sans-serif;",
+      "color:#F2EDD8;font-size:12px;font-family:'Space Mono',monospace;"
+    );
+  }, []);
   const[activeSection,setActiveSection]=useState("");
   useEffect(()=>{const sections=document.querySelectorAll("section[id]");const obs=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)setActiveSection(e.target.id);}),{threshold:0.3});sections.forEach(s=>obs.observe(s));return()=>obs.disconnect();},[]);
   // Inline confetti implementation
